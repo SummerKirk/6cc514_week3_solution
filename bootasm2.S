@@ -89,12 +89,22 @@ getdigit:
 IntBuffer:   .string "     "
 
 # COMMENT: if statement to go between cons_write_int and cons_write_hex
+# Comment: constant definitions for the offsets to the parameters and variables
+#define a  4
+#define b   6
+#define x   -4
+#define y   -2
 cons_write_number:
-    # values in where?
-    # number 1 held in stack for this call -> move to bx in next set for use in writes
-    # the seccond variable will be held also in stack -> move to bx
+    # values in stack
+    # stack access
+    pushw %bp
+    movw %sp, %bp
+    subw $4, %sp
+    movw a(%bp), %bx    # the constant a is used to get to the seccond param
+    # the first value on the stack we want is at offset 6 (parameter 1)
+    # the seccond we want is at offset 4 (parameter 2)
     # use the seccond variable in a comp to determine next call
-    pop %bx                             # put var 2 (stack top if calls done right) into bx
+    call cons_write_int         # see if it's the right one
     cmp $10, %bx
     je prep_int_stack
     cmp $16, %bx
@@ -102,13 +112,26 @@ cons_write_number:
     movw $base_not_found_msg, %si       # display when second digit not applicable
     call cons_writeline
 cons_write_number_done:
-    ret
+    # COMMENT stack cleanup
+    movw %bp, %sp
+    popw %bp
+    ret     $4
 prep_int_stack:
-    pop %bx
-    jmp cons_write_int
+    # COMMENT get value at offset 6 into bx
+    movw b(%bp), %bx    # the constant b is used to get the first param
+    call cons_write_int
+    # COMMENT stack cleanup
+    movw %bp, %sp
+    popw %bp
+    ret     $4
 prep_hex_stack:
-    pop %bx
-    jmp cons_write_hex
+    # get value at offset 6 into bx
+    movw b(%bp), %bx    # the constant b is used to get the first param
+    call cons_write_hex
+    # COMMENT stack cleanup
+    movw %bp, %sp
+    popw %bp
+    ret     $4
 
 real_start:
     movb    %dl, (boot_device) # Boot device number is passed in DL from BIOS. Save it hear since DL might get trashed
@@ -154,11 +177,15 @@ finish:
     call    cons_write_crlf
     # branch with stack stuff
     movw $290, %bx
-    push %bx
+    call    cons_write_int      # for debug
+    call    cons_write_crlf     # for debug
+    pushw %bx
     movw $10, %bx
-    push %bx
+    call    cons_write_int      # for debug
+    call    cons_write_crlf     # for debug
+    pushw %bx
     call cons_write_number
-    call cons_write_crlf
+    call cons_write_crlf  
 
 endless_loop:                   # Loop forever more
     jmp     endless_loop    
