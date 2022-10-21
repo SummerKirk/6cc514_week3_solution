@@ -105,7 +105,7 @@ cons_write_number:
     # the seccond we want is at offset 4 (parameter 2)
     # use the seccond variable in a comp to determine next call
     call cons_write_int         # see if it's the right one
-    call cons_write_crlf             # debug
+    call cons_write_crlf             # for debug
     cmp $10, %bx
     je prep_int_stack
     cmp $16, %bx
@@ -182,6 +182,17 @@ finish:
     call    cons_write_crlf     # for debug
     pushw %bx
     movw $10, %bx
+    call    cons_write_int      # for debug
+    call    cons_write_crlf     # for debug
+    pushw %bx
+    call cons_write_number
+    call cons_write_crlf  
+
+    movw $290, %bx
+    call    cons_write_int      # for debug
+    call    cons_write_crlf     # for debug
+    pushw %bx
+    movw $16, %bx
     call    cons_write_int      # for debug
     call    cons_write_crlf     # for debug
     pushw %bx
