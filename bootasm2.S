@@ -70,6 +70,7 @@ divide_by_ten:
     movw $10, %cx
     div %cx                     # remainder will be in dx
     ret	
+
 cons_write_int:
     movw    $IntBuffer + 4, %si
     movw    %bx, %ax
@@ -86,6 +87,28 @@ getdigit:
 	ret
 	
 IntBuffer:   .string "     "
+
+# COMMENT: if statement to go between cons_write_int and cons_write_hex
+cons_write_number:
+    # values in where?
+    # number 1 held in stack for this call -> move to bx in next set for use in writes
+    # the seccond variable will be held also in stack -> move to bx
+    # use the seccond variable in a comp to determine next call
+    pop %bx                             # put var 2 (stack top if calls done right) into bx
+    cmp $10, %bx
+    je prep_int_stack
+    cmp $16, %bx
+    je prep_hex_stack
+    movw $base_not_found_msg, %si       # display when second digit not applicable
+    call cons_writeline
+cons_write_number_done:
+    ret
+prep_int_stack:
+    pop %bx
+    jmp cons_write_int
+prep_hex_stack:
+    pop %bx
+    jmp cons_write_hex
 
 real_start:
     movb    %dl, (boot_device) # Boot device number is passed in DL from BIOS. Save it hear since DL might get trashed
@@ -129,6 +152,13 @@ finish:
     movw    $0, %bx
     call    cons_write_int
     call    cons_write_crlf
+    # branch with stack stuff
+    movw $290, %bx
+    push %bx
+    movw $10, %bx
+    push %bx
+    call cons_write_number
+    call cons_write_crlf
 
 endless_loop:                   # Loop forever more
     jmp     endless_loop    
@@ -144,4 +174,5 @@ booted_from_msg:
     .string "Booting from "
 fd: .string "floppy disk"
 hd: .string "hard drive"
-
+base_not_found_msg:
+    .string "base not found"
