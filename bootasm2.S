@@ -65,15 +65,17 @@ hexloop:
 # Output the value in BX as an unsigned integer
 #
 # Input: BX = Value to output
-	
+divide_by_ten:
+    xor %dx, %dx
+    movw $10, %cx
+    div %cx                     # remainder will be in dx
+    ret	
 cons_write_int:
     movw    $IntBuffer + 4, %si
     movw    %bx, %ax
 	
 getdigit:
-	xor		%dx, %dx
-	movw	$10, %cx
-	div		%cx
+	call divide_by_ten
 	addb	$48, %dl
 	movb	%dl, (%si)
 	dec		%si
